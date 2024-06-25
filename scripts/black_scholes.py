@@ -1,9 +1,5 @@
-# Importing necessary libraries for data manipulation, mathematical operations and plotting
-import matplotlib.pyplot as plt
-import yfinance as yf  
-import pandas as pd
-import numpy as np
-import scipy.stats as si
+import setup
+from imports import *
 
 # Black-Scholes Call Price Calculation
 def black_scholes_call(S, K, T, r, sigma):

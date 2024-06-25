@@ -1,5 +1,4 @@
-import os
-import sys
+from imports import *
 
 # Determine the path of the parent directory of the current script
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

@@ -1,9 +1,5 @@
-import yfinance as yf  
-import pandas as pd
-import requests
-from bs4 import BeautifulSoup
-
-# Scrape the Yahoo Finance Table
+import setup
+from imports import *
 
 # Function to fetch stock price using yfinance
 def get_stock_price(ticker):
