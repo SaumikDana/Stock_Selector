@@ -1,5 +1,6 @@
+import setup
 import yfinance as yf  
-from analyze_options import *
+from scripts.analyze_options import *
 
 def print_info_keys(ticker_symbol):
     stock = yf.Ticker(ticker_symbol)

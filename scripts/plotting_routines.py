@@ -1,3 +1,4 @@
+import setup
 import matplotlib.pyplot as plt
 import yfinance as yf  
 import matplotlib.dates as mdates
@@ -6,8 +7,8 @@ from datetime import datetime, timedelta
 from scipy.interpolate import griddata
 import matplotlib.ticker as mticker
 import pandas as pd
-from analyze_options import *
-from analyze_stock import *
+from scripts.analyze_options import *
+from scripts.analyze_stock import *
 
 def plot_volatility_surface(options_data, ticker):
     try:
