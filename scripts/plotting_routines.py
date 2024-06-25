@@ -71,7 +71,6 @@ def plot_volatility_surface(options_data, ticker):
         print(f"An error occurred: {e}")
 
 def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
-    # Fetch the current stock price
     stock = yf.Ticker(ticker)
     current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
@@ -120,10 +119,11 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     plt.tight_layout()
     plt.show()
 
-# Function to plot the P/E ratio time series
 def plot_pe_ratio(ticker_symbol, date):
-    start_date = date - timedelta(days=365)  # Approximately 1 year back
-    end_date = date  # Up to the current date
+    start_date = date - timedelta(days=365)  
+    # Approximately 1 year back
+    end_date = date  
+    # Up to the current date
 
     hist = get_financial_ratios(ticker_symbol, start_date, end_date)
 
@@ -165,8 +165,6 @@ def stock_tracker(ticker_symbol, subplot_position):
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
 def plot_etf_historical_data(ticker_symbol, start_date, end_date):
-
-    # Fetch stock information
     stock = yf.Ticker(ticker_symbol)
 
     # Get the industry of the stock
@@ -185,8 +183,6 @@ def plot_etf_historical_data(ticker_symbol, start_date, end_date):
     return
 
 def plot_stock_historical_data(ticker_symbol, start_date, end_date):
-
-    # Fetch stock information
     stock = yf.Ticker(ticker_symbol)
 
     # Get the industry of the stock
@@ -198,7 +194,6 @@ def plot_stock_historical_data(ticker_symbol, start_date, end_date):
     return
 
 def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=False):
-
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
 

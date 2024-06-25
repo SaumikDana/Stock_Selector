@@ -11,18 +11,14 @@ def print_info_keys(ticker_symbol):
     except Exception as e:
         print(f"Error retrieving info for {ticker_symbol}: {e}")
 
-# Function to fetch historical financial ratios
 def get_financial_ratios(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
 
-    # Use trailing EPS to calculate P/E ratio if available
     if 'trailingEps' in stock.info:
         trailing_eps = stock.info['trailingEps']
         hist['P/E'] = hist['Close'] / trailing_eps
 
-    # Other calculations could follow a similar pattern if the data were available
-    
     return hist
     
 def get_sector_etf_for_stock():
@@ -82,20 +78,16 @@ def get_sector_etf_for_stock():
     return industry_etf_dict
 
 def calculate_historical_volatility(ticker_symbol, period="1y"):
-    # Fetch historical stock data
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(period=period)
 
-    # Calculate daily returns
     daily_returns = hist['Close'].pct_change().dropna()
 
-    # Calculate standard deviation of daily returns (historical volatility)
     historical_volatility = np.std(daily_returns)
     
     return historical_volatility
 
 def analyze_stock_options(ticker, price_range_factor=0.25):
-    # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
 
     # Get current stock price
@@ -108,11 +100,16 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
     # Initialize variables for aggregating options data
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
     total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, []
-    total_itm_calls, total_itm_puts = 0, 0  # Counters for in-the-money options
-    total_otm_calls, total_otm_puts = 0, 0  # Counters for out-of-the-money options
-    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  # Lists to store data
-    call_ivs, put_ivs = [], []  # Lists to store implied volatilities
-    exp_dates_count = 0  # Counter for the number of expiration dates
+    total_itm_calls, total_itm_puts = 0, 0  
+    # Counters for in-the-money options
+    total_otm_calls, total_otm_puts = 0, 0  
+    # Counters for out-of-the-money options
+    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  
+    # Lists to store data
+    call_ivs, put_ivs = [], []  
+    # Lists to store implied volatilities
+    exp_dates_count = 0  
+    # Counter for the number of expiration dates
 
     # Get the list of options expiration dates for the stock
     exp_dates = stock.options

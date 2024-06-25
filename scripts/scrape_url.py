@@ -33,10 +33,7 @@ def process_earnings_table(table, ticker_data_list=[]):
 
     return ticker_data_list
 
-def extract_table(url):
-    
-    # Scrape data from Yahoo Finance
-    
+def extract_table(url):    
     headers = {'user-agent': 'Mozilla/5.0'}
     try:
         # Send the GET request
@@ -58,8 +55,6 @@ def extract_table(url):
         return None
 
 def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
-
-    # Concatenate all DataFrame objects into one DataFrame
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
 
     # Clean and sort the data

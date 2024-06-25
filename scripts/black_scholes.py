@@ -1,11 +1,10 @@
 import setup
 from imports import *
 
-# Black-Scholes Call Price Calculation
 def black_scholes_call(S, K, T, r, sigma):
-    # Prevent division by zero or near-zero values in sigma and T
     sigma = max(sigma, 0.0001)
-    T = max(T, 1/(365*24*60))  # Ensuring at least 1 minute to expiration
+    T = max(T, 1/(365*24*60))  
+    # Ensuring at least 1 minute to expiration
 
     # Calculating d1 and d2 using the Black-Scholes formula components
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
@@ -20,11 +19,10 @@ def black_scholes_call(S, K, T, r, sigma):
 
     return call_price
 
-# Calculate Greeks for Call Option
 def call_greeks(S, K, T, r, sigma):
-    # Prevent division by zero or near-zero values in sigma and T
     sigma = max(sigma, 0.0001)
-    T = max(T, 1/(365*24*60))  # Ensuring at least 1 minute to expiration
+    T = max(T, 1/(365*24*60))  
+    # Ensuring at least 1 minute to expiration
 
     # Try-except block to handle exceptions during Greeks calculation
     try:
@@ -44,9 +42,7 @@ def call_greeks(S, K, T, r, sigma):
 
     return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
 
-# Black-Scholes Put Price Calculation
 def black_scholes_put(S, K, T, r, sigma):
-    # Prevent division by zero or near-zero values in sigma and T
     sigma = max(sigma, 0.0001)
     T = max(T, 1/(365*24*60))
 
@@ -57,9 +53,7 @@ def black_scholes_put(S, K, T, r, sigma):
     # Calculating the put price using the Black-Scholes formula
     return (K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0) - S * si.norm.cdf(-d1, 0.0, 1.0))
 
-# Calculate Greeks for Put Option
 def put_greeks(S, K, T, r, sigma):
-    # Calculating d1 and d2 for the Greeks
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
 
