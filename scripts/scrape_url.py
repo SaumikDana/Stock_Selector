@@ -1,7 +1,6 @@
 import setup
 from imports import *
 
-# Function to fetch stock price using yfinance
 def get_stock_price(ticker):
     stock = yf.Ticker(ticker)
     try:
@@ -12,12 +11,7 @@ def get_stock_price(ticker):
         print(f"Error retrieving info for {ticker}: {e}")
         return None
 
-def process_earnings_table(table, ticker_data_list=[]):
-    """
-    Process a single earnings table to extract ticker symbols, 
-    fetch stock prices, and get earnings release dates.
-    """
-
+def process_earnings_table(table, ticker_data_list):
     if table == None:
         return ticker_data_list
 
