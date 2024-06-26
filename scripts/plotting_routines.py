@@ -1,6 +1,7 @@
 import setup
 from imports import *
 from scripts.analyze_stock import *
+from scripts.scrape_url import get_stock_price
 
 def plot_volatility_surface(options_data, ticker):
     try:
@@ -231,3 +232,41 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     # Plotting stock history
     plt.subplot(1, 2, 2)
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
+
+def plot_option_data(df, ticker, option_type='Calls', y_axis='impliedVolatility', stock_price=None):
+    # Filter based on option type
+    df = df[df['contractSymbol'].str.contains('C' if option_type == 'Calls' else 'P')]
+    # Remove entries with zero openInterest
+    df = df[df['openInterest'] > 0]
+    # Sort by strike price
+    df = df.sort_values(by='strike', ascending=True)
+    
+    # Plot
+    plt.figure(figsize=(8, 5))
+    plt.scatter(df['strike'], df[y_axis], 
+                color='green' if option_type == 'Calls' else 'red', 
+                edgecolors='black', s=10)
+    plt.title(f'{option_type} Options: {y_axis} vs. Strike Price ({ticker})')
+    plt.xlabel('Strike Price')
+    plt.ylabel(y_axis)
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    
+    # If stock price is provided, add a vertical line at that price
+    if stock_price is not None:
+        plt.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
+    plt.legend()
+    plt.show()
+
+def plot_calls_puts_separately(df, ticker):
+
+    stock_price = get_stock_price(ticker)
+
+    plot_option_data(df, ticker, 'Calls', stock_price=stock_price, y_axis='openInterest')
+    plot_option_data(df, ticker, 'Calls', stock_price=stock_price, y_axis='volume')
+
+    plot_option_data(df, ticker, 'Puts', stock_price=stock_price, y_axis='openInterest')
+    plot_option_data(df, ticker, 'Puts', stock_price=stock_price, y_axis='volume')
+
+    return

@@ -193,3 +193,29 @@ def print_options_data(ticker, options_metrics):
 
     return
 
+def options_chain(symbol):
+    # Create a ticker object
+    tk = yf.Ticker(symbol)
+    # Get expiration dates
+    exps = tk.options
+
+    # Get the current date
+    current_date = datetime.now().date()
+
+    # Get options for each expiration
+    options = pd.DataFrame()
+    for e in exps:
+        opt = tk.option_chain(e)
+        opt_df = pd.concat([opt.calls, opt.puts])
+        opt_df['expirationDate'] = e
+        # Convert expirationDate to datetime.date for calculation
+        opt_df['expirationDate'] = pd.to_datetime(opt_df['expirationDate']).dt.date
+        # Calculate days to expiry
+        print(f'Ticker: {symbol}')
+        opt_df['daysToExpiry'] = (opt_df['expirationDate'] - current_date).apply(lambda x: x.days)
+        options = pd.concat([options, opt_df], ignore_index=True)
+
+    # Filter out entries where daysToExpiry is greater than 30
+    options = options[options['daysToExpiry'] <= 30]
+
+    return options
