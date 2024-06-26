@@ -12,13 +12,9 @@ def get_stock_price(ticker):
         return None
 
 def process_earnings_table(table, ticker_data_list):
-    if table == None:
-        return ticker_data_list
-
     df = pd.read_html(str(table))[0]
     
     if 'Symbol' in df.columns:
-        # Assuming the release date column is named 'Release Date'
         for _, row in df.iterrows():
             ticker = row.get('Symbol')
             if pd.notna(ticker):
@@ -27,27 +23,19 @@ def process_earnings_table(table, ticker_data_list):
 
     return ticker_data_list
 
-def extract_table(url):    
-    headers = {'user-agent': 'Mozilla/5.0'}
+def extract_table(url):
     try:
-        # Send the GET request
-        response = requests.get(url, headers=headers)
-        # Parse the page content with BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Find all tables in the webpage
+        driver.get(url)
+        time.sleep(1)  
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        driver.quit()  
         table = soup.find_all('table')
-        
-        # Check if there are any tables found
         if not table:
             return None
-        
-        # Further processing or return the tables
         return table
-
-    except requests.RequestException as e:
-        return None
-
+    except:
+        return None  
+        
 def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
 

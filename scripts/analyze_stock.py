@@ -4,7 +4,7 @@ from imports import *
 def print_info_keys(ticker_symbol):
     stock = yf.Ticker(ticker_symbol)
     try:
-        stock_info = stock.info  # Fetch stock information
+        stock_info = stock.info  
         print(f"Information for {ticker_symbol}:")
         for key, value in stock_info.items():
             print(f"{key}: {value}")
@@ -90,10 +90,8 @@ def calculate_historical_volatility(ticker_symbol, period="1y"):
 def analyze_stock_options(ticker, price_range_factor=0.25):
     stock = yf.Ticker(ticker)
 
-    # Get current stock price
     current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
-    # Calculate bounds for strike price filtering based on current price
     lower_bound = current_price * (1 - price_range_factor)
     upper_bound = current_price * (1 + price_range_factor)
 
@@ -101,22 +99,15 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
     total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, []
     total_itm_calls, total_itm_puts = 0, 0  
-    # Counters for in-the-money options
     total_otm_calls, total_otm_puts = 0, 0  
-    # Counters for out-of-the-money options
     call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  
-    # Lists to store data
     call_ivs, put_ivs = [], []  
-    # Lists to store implied volatilities
     exp_dates_count = 0  
-    # Counter for the number of expiration dates
 
-    # Get the list of options expiration dates for the stock
     exp_dates = stock.options
 
     # Loop through each expiration date to analyze options data
     for date in exp_dates:
-        # Retrieve call and put options data for the current expiration date
         options_data = stock.option_chain(date)
 
         call_options, put_options = options_data.calls, options_data.puts
@@ -185,26 +176,19 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
 def print_options_data(ticker, options_metrics):
     
     print("===========================================")
-
     print(f"Options data for {ticker}:")
-
     print(f"Average IV for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average IV for Puts: {options_metrics['avg_put_implied_volatility']}")
-
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
     print(f"Total Call open interest: {options_metrics['total_call_open_interest']}")
     print(f"Total Call engagement: {options_metrics['total_call_engagement']}")
-
     print(f"Total Put Volume: {options_metrics['total_put_volume']}")
     print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
     print(f"Total Put engagement: {options_metrics['total_put_engagement']}")
-
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
-
     print(f"Number of OTM Call Options: {options_metrics['total_otm_calls']}")
     print(f"Number of OTM Put Options: {options_metrics['total_otm_puts']}")
-
     print("===========================================")
 
     return

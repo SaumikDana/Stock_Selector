@@ -13,3 +13,8 @@ import requests
 from bs4 import BeautifulSoup
 import math
 from IPython.display import display
+from selenium import webdriver
+import time
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')  # Run in headless mode
+driver = webdriver.Chrome(options=options)
