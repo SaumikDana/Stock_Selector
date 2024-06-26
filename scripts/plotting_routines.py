@@ -8,6 +8,7 @@ def plot_volatility_surface(options_data, ticker):
         # Extract data
         stock = yf.Ticker(ticker)
         current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
+
         call_strike_prices = list(np.array(options_data['call_strike_prices'])/current_price)
         put_strike_prices = list(np.array(options_data['put_strike_prices'])/current_price)
         call_ivs = options_data['call_ivs']
@@ -234,6 +235,8 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
 
 def plot_option_data(df, ticker, option_type='Calls', y_axis='impliedVolatility', stock_price=None):
+    if 'contractSymbol' not in df.columns:
+        return
     # Filter based on option type
     df = df[df['contractSymbol'].str.contains('C' if option_type == 'Calls' else 'P')]
     # Remove entries with zero openInterest
