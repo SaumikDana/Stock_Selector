@@ -98,13 +98,22 @@ def extend_lists(call_strikes, put_strikes, call_ivs, put_ivs, call_expirations,
 def analyze_stock_options(ticker):
     stock = yf.Ticker(ticker)
     exp_dates = stock.options
-
     call_strikes, put_strikes, call_expirations, put_expirations, call_ivs, put_ivs = [], [], [], [], [], []  
+    current_date = datetime.now().date()
+    opt_df = pd.DataFrame()
 
     for date in exp_dates:
         opt = stock.option_chain(date)
         call_options, put_options = opt.calls, opt.puts
+
         extend_lists(call_strikes, put_strikes, call_ivs, put_ivs, call_expirations, put_expirations, call_options, put_options, date)
+
+        _df = pd.concat([call_options, put_options])
+        _df['expirationDate'] = date
+        _df['expirationDate'] = pd.to_datetime(_df['expirationDate']).dt.date
+        _df['daysToExpiry'] = (opt_df['expirationDate'] - current_date).apply(lambda x: x.days)
+        opt_df = pd.concat([options, _df], ignore_index=True)
+        del _df
 
     opt_dict = {
         "call_strikes": call_strikes,
@@ -115,25 +124,7 @@ def analyze_stock_options(ticker):
         "put_expirations": put_expirations
     }
 
-    return opt_dict
+    if 'daysToExpiry' in opt_df.columns:
+        opt_df = opt_df[opt_df['daysToExpiry'] <= 30]
 
-def options_chain(ticker):
-    stock = yf.Ticker(ticker)
-    exp_dates = stock.options
-
-    current_date = datetime.now().date()
-
-    options = pd.DataFrame()
-    for date in exp_dates:
-        opt = stock.option_chain(date)
-        call_options, put_options = opt.calls, opt.puts
-        opt_df = pd.concat([call_options, put_options])
-        opt_df['expirationDate'] = date
-        opt_df['expirationDate'] = pd.to_datetime(opt_df['expirationDate']).dt.date
-        opt_df['daysToExpiry'] = (opt_df['expirationDate'] - current_date).apply(lambda x: x.days)
-        options = pd.concat([options, opt_df], ignore_index=True)
-
-    if 'daysToExpiry' in options.columns:
-        options = options[options['daysToExpiry'] <= 30]
-
-    return options
+    return opt_dict, opt_df
