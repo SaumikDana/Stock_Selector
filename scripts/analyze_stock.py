@@ -111,7 +111,7 @@ def analyze_stock_options(ticker):
         _df = pd.concat([call_options, put_options])
         _df['expirationDate'] = date
         _df['expirationDate'] = pd.to_datetime(_df['expirationDate']).dt.date
-        _df['daysToExpiry'] = (opt_df['expirationDate'] - current_date).apply(lambda x: x.days)
+        _df['daysToExpiry'] = (_df['expirationDate'] - current_date).apply(lambda x: x.days)
         opt_df = pd.concat([options, _df], ignore_index=True)
         del _df
 
