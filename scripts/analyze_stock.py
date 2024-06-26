@@ -84,84 +84,55 @@ def calculate_historical_volatility(ticker_symbol, period="1y"):
     
     return historical_volatility
 
-def analyze_stock_options(ticker, price_range_factor=0.25):
+def extend_lists(call_strikes, put_strikes, call_ivs, put_ivs, call_expirations, put_expirations, call_options, put_options, date):
+        
+    call_strikes.extend(call_options['strike'].tolist())
+    put_strikes.extend(put_options['strike'].tolist())
+    call_ivs.extend(call_options['impliedVolatility'].tolist())
+    put_ivs.extend(put_options['impliedVolatility'].tolist())
+    call_expirations.extend([date] * len(call_options))
+    put_expirations.extend([date] * len(put_options))
+
+    return
+
+def analyze_stock_options(ticker):
     stock = yf.Ticker(ticker)
-
-    current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
-
-    lower_bound = current_price * (1 - price_range_factor)
-    upper_bound = current_price * (1 + price_range_factor)
-
-    # Initialize variables for aggregating options data
-    total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
-    total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, []
-    total_itm_calls, total_itm_puts = 0, 0  
-    total_otm_calls, total_otm_puts = 0, 0  
-    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  
-    call_ivs, put_ivs = [], []  
-    exp_dates_count = 0  
-
     exp_dates = stock.options
 
-    # Loop through each expiration date to analyze options data
+    call_strikes, put_strikes, call_expirations, put_expirations, call_ivs, put_ivs = [], [], [], [], [], []  
+
     for date in exp_dates:
-        options_data = stock.option_chain(date)
+        opt = stock.option_chain(date)
+        call_options, put_options = opt.calls, opt.puts
+        extend_lists(call_strikes, put_strikes, call_ivs, put_ivs, call_expirations, put_expirations, call_options, put_options, date)
 
-        call_options, put_options = options_data.calls, options_data.puts
-
-        filtered_call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
-        filtered_put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
-
-        call_strike_prices.extend(filtered_call_options['strike'].tolist())
-        put_strike_prices.extend(filtered_put_options['strike'].tolist())
-        call_ivs.extend(filtered_call_options['impliedVolatility'].tolist())
-        put_ivs.extend(filtered_put_options['impliedVolatility'].tolist())
-        call_expirations.extend([date] * len(filtered_call_options))
-        put_expirations.extend([date] * len(filtered_put_options))
-
-        total_call_volume += filtered_call_options['volume'].sum()
-        total_call_open_interest += filtered_call_options['openInterest'].sum()
-        total_call_implied_volatility.extend(filtered_call_options['impliedVolatility'].tolist())
-
-        total_put_volume += filtered_put_options['volume'].sum()
-        total_put_open_interest += filtered_put_options['openInterest'].sum()
-        total_put_implied_volatility.extend(filtered_put_options['impliedVolatility'].tolist())
-
-        # Increment the expiration dates counter
-        exp_dates_count += 1
-
-    # Return a dictionary with the aggregated and calculated options metrics
-    return {
-        "call_strike_prices": call_strike_prices,
-        "put_strike_prices": put_strike_prices,
+    opt_dict = {
+        "call_strikes": call_strikes,
+        "put_strikes": put_strikes,
         "call_ivs": call_ivs,
         "put_ivs": put_ivs,
         "call_expirations": call_expirations,
         "put_expirations": put_expirations
     }
 
-def options_chain(symbol):
-    # Create a ticker object
-    tk = yf.Ticker(symbol)
-    # Get expiration dates
-    exps = tk.options
+    return opt_dict
 
-    # Get the current date
+def options_chain(ticker):
+    stock = yf.Ticker(ticker)
+    exp_dates = stock.options
+
     current_date = datetime.now().date()
 
-    # Get options for each expiration
     options = pd.DataFrame()
-    for e in exps:
-        opt = tk.option_chain(e)
-        opt_df = pd.concat([opt.calls, opt.puts])
-        opt_df['expirationDate'] = e
-        # Convert expirationDate to datetime.date for calculation
+    for date in exp_dates:
+        opt = stock.option_chain(date)
+        call_options, put_options = opt.calls, opt.puts
+        opt_df = pd.concat([call_options, put_options])
+        opt_df['expirationDate'] = date
         opt_df['expirationDate'] = pd.to_datetime(opt_df['expirationDate']).dt.date
-        # Calculate days to expiry
         opt_df['daysToExpiry'] = (opt_df['expirationDate'] - current_date).apply(lambda x: x.days)
         options = pd.concat([options, opt_df], ignore_index=True)
 
-    # Filter out entries where daysToExpiry is greater than 30
     if 'daysToExpiry' in options.columns:
         options = options[options['daysToExpiry'] <= 30]
 

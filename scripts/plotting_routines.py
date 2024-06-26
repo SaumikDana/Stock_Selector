@@ -9,8 +9,8 @@ def plot_volatility_surface(options_data, ticker):
         stock = yf.Ticker(ticker)
         current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
-        call_strike_prices = list(np.array(options_data['call_strike_prices'])/current_price)
-        put_strike_prices = list(np.array(options_data['put_strike_prices'])/current_price)
+        call_strikes = list(np.array(options_data['call_strikes'])/current_price)
+        put_strikes = list(np.array(options_data['put_strikes'])/current_price)
         call_ivs = options_data['call_ivs']
         put_ivs = options_data['put_ivs']
         call_expirations = options_data['call_expirations']
@@ -21,7 +21,7 @@ def plot_volatility_surface(options_data, ticker):
         put_exp_nums = mdates.date2num(pd.to_datetime(put_expirations))
 
         # Combine call and put data
-        strikes = np.array(call_strike_prices + put_strike_prices)
+        strikes = np.array(call_strikes + put_strikes)
         expirations = np.array(list(call_exp_nums) + list(put_exp_nums))
         ivs = np.array(call_ivs + put_ivs)
 
@@ -79,8 +79,8 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     historical_volatility = calculate_historical_volatility(ticker)
 
     # Extract call and put strike prices and IVs
-    call_strike_prices = options_data['call_strike_prices']
-    put_strike_prices = options_data['put_strike_prices']
+    call_strikes = options_data['call_strikes']
+    put_strikes = options_data['put_strikes']
     call_ivs = options_data['call_ivs']
     put_ivs = options_data['put_ivs']
     call_expirations = options_data['call_expirations']
@@ -92,12 +92,12 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     target_date_dt = np.datetime64(target_date)
 
     # Filter call data for OTM options
-    filtered_call_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
+    filtered_call_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(call_strikes, call_ivs, call_expirations_dt)
                               if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike > current_price]
     call_strikes_rel_otm, call_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_call_data_otm]) if filtered_call_data_otm else ([], [])
 
     # Filter put data for OTM options
-    filtered_put_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
+    filtered_put_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(put_strikes, put_ivs, put_expirations_dt)
                              if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike < current_price]
     put_strikes_rel_otm, put_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_put_data_otm]) if filtered_put_data_otm else ([], [])
 
@@ -115,7 +115,7 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
     ax.set_xlabel('Strike Price / Current Price')
     ax.set_ylabel('Implied Volatility')
-    ax.legend(frameon=False)
+    ax.legend(frameon=False, loc='best')
     ax.grid(True)
 
     plt.tight_layout()
