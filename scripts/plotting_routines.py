@@ -45,7 +45,7 @@ def plot_volatility_surface(options_data, ticker):
         ivs_grid = griddata((strikes, expirations), ivs, (strike_grid, exp_grid), method='cubic')
 
         # Plot the surface
-        fig = plt.figure(figsize=(20, 10))
+        fig = plt.figure(figsize=(10, 5))
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(strike_grid, exp_grid, ivs_grid, cmap='viridis', edgecolor='none')
 
