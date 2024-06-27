@@ -5,7 +5,6 @@ from scripts.scrape_url import get_stock_price
 
 def plot_volatility_surface(options_data, ticker):
     try:
-        # Extract data
         stock = yf.Ticker(ticker)
         current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
@@ -16,53 +15,43 @@ def plot_volatility_surface(options_data, ticker):
         call_expirations = options_data['call_expirations']
         put_expirations = options_data['put_expirations']
 
-        # Convert expiration dates to numerical format
         call_exp_nums = mdates.date2num(pd.to_datetime(call_expirations))
         put_exp_nums = mdates.date2num(pd.to_datetime(put_expirations))
 
-        # Combine call and put data
         strikes = np.array(call_strikes + put_strikes)
         expirations = np.array(list(call_exp_nums) + list(put_exp_nums))
         ivs = np.array(call_ivs + put_ivs)
 
-        # Check for sufficient variation in data
         if len(set(strikes)) < 2 or len(set(expirations)) < 2:
             print("Insufficient variation in strike prices or expiration dates for interpolation.")
             return
 
-        # Check for NaNs or infinite values
         if np.isnan(ivs).any() or np.isinf(ivs).any():
             print("Data contains NaNs or infinite values.")
             return
 
-        # Create a 2D grid of strikes and expirations
         strike_grid, exp_grid = np.meshgrid(
             np.linspace(strikes.min(), strikes.max(), 100),
             np.linspace(expirations.min(), expirations.max(), 100)
         )
 
-        # Interpolate IV data over the grid
         ivs_grid = griddata((strikes, expirations), ivs, (strike_grid, exp_grid), method='cubic')
 
-        # Plot the surface
         fig = plt.figure(figsize=(10, 5))
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(strike_grid, exp_grid, ivs_grid, cmap='viridis', edgecolor='none')
 
-        # Labels and title
         ax.set_title(f'Volatility Surface for {ticker}')
-        ax.set_xlabel('Moneyness (Strike Price/Current Price)')
-        ax.set_ylabel('Expiration Date')
+        ax.set_xlabel('Strike/Spot')
+        ax.set_ylabel('Expiration')
         ax.set_zlabel('Implied Volatility')
 
-        # Date formatting
         ax.yaxis.set_major_locator(mdates.AutoDateLocator())
         ax.yaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-        ax.yaxis.set_tick_params(labelsize=9)
+        ax.yaxis.set_tick_params(labelsize=6)
         for label in ax.yaxis.get_majorticklabels():
             label.set_rotation(45)
 
-        # View adjustment
         ax.view_init(30, 210)
         colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
         plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
@@ -78,7 +67,6 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
 
     historical_volatility = calculate_historical_volatility(ticker)
 
-    # Extract call and put strike prices and IVs
     call_strikes = options_data['call_strikes']
     put_strikes = options_data['put_strikes']
     call_ivs = options_data['call_ivs']
@@ -86,30 +74,24 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     call_expirations = options_data['call_expirations']
     put_expirations = options_data['put_expirations']
 
-    # Convert expiration dates to datetime objects and filter by target date
     call_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in call_expirations]
     put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
     target_date_dt = np.datetime64(target_date)
 
-    # Filter call data for OTM options
     filtered_call_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(call_strikes, call_ivs, call_expirations_dt)
                               if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike > current_price]
     call_strikes_rel_otm, call_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_call_data_otm]) if filtered_call_data_otm else ([], [])
 
-    # Filter put data for OTM options
     filtered_put_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(put_strikes, put_ivs, put_expirations_dt)
                              if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike < current_price]
     put_strikes_rel_otm, put_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_put_data_otm]) if filtered_put_data_otm else ([], [])
 
-    # Create plot for combined OTM skew
-    fig, ax = plt.subplots(figsize=(15, 6))
+    fig, ax = plt.subplots(figsize=(8, 4))
 
-    # Plot OTM call and put data
-    ax.scatter(call_strikes_rel_otm, call_ivs_rel_otm, color='blue', marker='o', label='OTM Calls')
-    ax.scatter(put_strikes_rel_otm, put_ivs_rel_otm, color='green', marker='o', label='OTM Puts')
+    ax.scatter(call_strikes_rel_otm, call_ivs_rel_otm, color='blue', marker='o', label='OTM Calls', s=10)
+    ax.scatter(put_strikes_rel_otm, put_ivs_rel_otm, color='green', marker='o', label='OTM Puts', s=10)
     ax.axvline(1, color='grey', linestyle='--', label='Current Price')
 
-    # Overlay historical volatility as a horizontal line
     ax.axhline(y=historical_volatility, color='purple', linestyle='--', label=f'Historical Volatility ({historical_volatility:.2%})')
 
     ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
@@ -123,9 +105,7 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
 
 def plot_pe_ratio(ticker_symbol, date):
     start_date = date - timedelta(days=365)  
-    # Approximately 1 year back
     end_date = date  
-    # Up to the current date
 
     hist = get_financial_ratios(ticker_symbol, start_date, end_date)
 
@@ -166,31 +146,11 @@ def stock_tracker(ticker_symbol, subplot_position):
     plt.tick_params(axis='x', labelsize=6)
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
-def plot_etf_historical_data(ticker_symbol, start_date, end_date):
-    stock = yf.Ticker(ticker_symbol)
-
-    # Get the industry of the stock
-    industry = stock.info.get("industry", None)
-
-    # Extract etf ticker symbol corresponding to industry
-    etf_ticker_symbol = get_sector_etf_for_stock().get(industry)
-    
-    # Check if ticker_symbol is not None
-    if etf_ticker_symbol is None:
-        return
-
-    # Plot historical data
-    plot_historical_data(etf_ticker_symbol, industry, start_date, end_date)
-
-    return
-
 def plot_stock_historical_data(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
 
-    # Get the industry of the stock
     industry = stock.info.get("industry", None)
 
-    # Plot historical data
     plot_historical_data(ticker_symbol, industry, start_date, end_date)
 
     return
@@ -199,7 +159,6 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=Fal
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
 
-    # Determine which data to plot: Close or regularMarketPreviousClose
     if 'Close' in hist.columns:
         prices = hist['Close']
     elif hasattr(stock.info, 'regularMarketPreviousClose'):
@@ -225,51 +184,56 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=Fal
     plt.show()
 
 def plot_stock_history(ticker_symbol, start_date, end_date):
-    plt.figure(figsize=(10, 4))
+    plt.figure(figsize=(10, 5))
     
-    # Plotting today's prices - Assuming stock_tracker is a defined function
     stock_tracker(ticker_symbol, 1)
 
-    # Plotting stock history
     plt.subplot(1, 2, 2)
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
 
-def plot_option_data(df, ticker, option_type='Calls', y_axis='impliedVolatility', stock_price=None):
+def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     if 'contractSymbol' not in df.columns:
         return
-    # Filter based on option type
     df = df[df['contractSymbol'].str.contains('C' if option_type == 'Calls' else 'P')]
-    # Remove entries with zero openInterest
     df = df[df['openInterest'] > 0]
-    # Sort by strike price
     df = df.sort_values(by='strike', ascending=True)
     
-    # Plot
-    plt.figure(figsize=(8, 5))
-    plt.scatter(df['strike'], df[y_axis], 
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))  # 1 row, 2 columns
+
+    ax1.scatter(df['strike'], df['impliedVolatility'], 
                 color='green' if option_type == 'Calls' else 'red', 
                 edgecolors='black', s=10)
-    plt.title(f'{option_type} Options: {y_axis} vs. Strike Price ({ticker})')
-    plt.xlabel('Strike Price')
-    plt.ylabel(y_axis)
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    plt.tight_layout()
-    
-    # If stock price is provided, add a vertical line at that price
+    ax1.set_title(f'{option_type} Options: Implied Volatility vs. Strike Price ({ticker})')
+    ax1.set_xlabel('Strike Price')
+    ax1.set_ylabel('Implied Volatility')
+    ax1.tick_params(axis='x', rotation=45)
+    ax1.grid(True)
+
     if stock_price is not None:
-        plt.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
-    plt.legend()
+        ax1.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
+        ax1.legend()
+
+    ax2.scatter(df['strike'], df['openInterest'], 
+                color='green' if option_type == 'Calls' else 'red', 
+                edgecolors='black', s=10)
+    ax2.set_title(f'{option_type} Options: Open Interest vs. Strike Price ({ticker})')
+    ax2.set_xlabel('Strike Price')
+    ax2.set_ylabel('Open Interest')
+    ax2.tick_params(axis='x', rotation=45)
+    ax2.grid(True)
+
+    if stock_price is not None:
+        ax2.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
+        ax2.legend()
+
+    plt.tight_layout()
     plt.show()
 
 def plot_calls_puts_separately(df, ticker):
 
     stock_price = get_stock_price(ticker)
 
-    plot_option_data(df, ticker, 'Calls', stock_price=stock_price, y_axis='openInterest')
-    plot_option_data(df, ticker, 'Calls', stock_price=stock_price, y_axis='volume')
-
-    plot_option_data(df, ticker, 'Puts', stock_price=stock_price, y_axis='openInterest')
-    plot_option_data(df, ticker, 'Puts', stock_price=stock_price, y_axis='volume')
+    plot_option_data(df, ticker, 'Calls', stock_price=stock_price)
+    plot_option_data(df, ticker, 'Puts', stock_price=stock_price)
 
     return
