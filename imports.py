@@ -18,3 +18,4 @@ import time
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')  # Run in headless mode
 driver = webdriver.Chrome(options=options)
+import ta 

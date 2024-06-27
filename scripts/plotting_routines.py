@@ -53,7 +53,7 @@ def plot_volatility_surface(options_data, ticker):
             label.set_rotation(45)
 
         ax.view_init(30, 210)
-        colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
+        # colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
         plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
 
         plt.show()
@@ -122,7 +122,7 @@ def plot_pe_ratio(ticker_symbol, date):
         plt.grid(True)
         plt.show()
     
-def stock_tracker(ticker_symbol, subplot_position):
+def stock_tracker(ticker_symbol):
     def get_todays_prices(ticker_symbol):
         try:
             ticker = yf.Ticker(ticker_symbol)
@@ -135,7 +135,6 @@ def stock_tracker(ticker_symbol, subplot_position):
     todays_prices = get_todays_prices(ticker_symbol)
     times = [ts.strftime('%H:%M') for ts in todays_prices.index]
     
-    plt.subplot(1, 2, subplot_position)
     plt.plot(times, todays_prices['Close'])
     plt.title(f"Today's Stock Price of {ticker_symbol}", fontsize='small')
     plt.xticks(times[::20], rotation=45)
@@ -148,9 +147,7 @@ def stock_tracker(ticker_symbol, subplot_position):
 
 def plot_stock_historical_data(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
-
     industry = stock.info.get("industry", None)
-
     plot_historical_data(ticker_symbol, industry, start_date, end_date)
 
     return
@@ -186,10 +183,14 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=Fal
 def plot_stock_history(ticker_symbol, start_date, end_date):
     plt.figure(figsize=(10, 5))
     
-    stock_tracker(ticker_symbol, 1)
+    plt.subplot(1, 2, 1)
+    stock_tracker(ticker_symbol)
 
     plt.subplot(1, 2, 2)
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
+    plt.close()
+
+    plot_rsi(ticker_symbol, start_date, end_date)
 
 def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     if 'contractSymbol' not in df.columns:
@@ -203,37 +204,56 @@ def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     ax1.scatter(df['strike'], df['impliedVolatility'], 
                 color='green' if option_type == 'Calls' else 'red', 
                 edgecolors='black', s=10)
-    ax1.set_title(f'{option_type} Options: Implied Volatility vs. Strike Price ({ticker})')
+    ax1.set_title(f'{option_type} Options, {ticker}')
     ax1.set_xlabel('Strike Price')
     ax1.set_ylabel('Implied Volatility')
     ax1.tick_params(axis='x', rotation=45)
     ax1.grid(True)
 
     if stock_price is not None:
-        ax1.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
+        ax1.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
         ax1.legend()
 
     ax2.scatter(df['strike'], df['openInterest'], 
                 color='green' if option_type == 'Calls' else 'red', 
                 edgecolors='black', s=10)
-    ax2.set_title(f'{option_type} Options: Open Interest vs. Strike Price ({ticker})')
+    ax2.set_title(f'{option_type} Options, {ticker}')
     ax2.set_xlabel('Strike Price')
     ax2.set_ylabel('Open Interest')
     ax2.tick_params(axis='x', rotation=45)
     ax2.grid(True)
 
     if stock_price is not None:
-        ax2.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Stock Price: {stock_price}')
+        ax2.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
         ax2.legend()
 
     plt.tight_layout()
     plt.show()
 
 def plot_calls_puts_separately(df, ticker):
-
     stock_price = get_stock_price(ticker)
-
     plot_option_data(df, ticker, 'Calls', stock_price=stock_price)
     plot_option_data(df, ticker, 'Puts', stock_price=stock_price)
 
+    return
+
+def plot_rsi(ticker_symbol, start_date, end_date, window=14):
+
+    adjusted_start_date = start_date - timedelta(days=window)
+
+    stock = yf.Ticker(ticker_symbol)
+    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+    rsi = ta.momentum.RSIIndicator(hist['Close'], window=window).rsi()
+
+    # Set up the plot
+    plt.figure(figsize=(8, 4))
+    plt.plot(rsi.index, rsi, label='RSI', color='purple')
+    plt.axhline(70, linestyle='--', color='red', alpha=0.5)
+    plt.axhline(30, linestyle='--', color='green', alpha=0.5)
+    plt.title(f'RSI, {ticker_symbol}')
+    plt.xticks(rotation=45)
+    plt.tick_params(axis='x', labelsize=8)  # Reduce x-tick label size
+
+    plt.show()
     return

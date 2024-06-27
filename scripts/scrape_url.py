@@ -13,14 +13,12 @@ def get_stock_price(ticker):
 
 def process_earnings_table(table, ticker_data_list):
     df = pd.read_html(str(table))[0]
-    
     if 'Symbol' in df.columns:
         for _, row in df.iterrows():
             ticker = row.get('Symbol')
             if pd.notna(ticker):
                 price = get_stock_price(ticker)
                 ticker_data_list.append(pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]}))
-
     return ticker_data_list
 
 def extract_table(url):
@@ -38,8 +36,6 @@ def extract_table(url):
         
 def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
-
-    # Clean and sort the data
     ticker_data = ticker_data.dropna(subset=['Stock Price'])
     ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
 
