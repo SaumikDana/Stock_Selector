@@ -192,6 +192,20 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
 
     plot_rsi(ticker_symbol, start_date, end_date)
 
+def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
+
+    ax.scatter(df['strike'], df[metric], 
+                color='green' if option_type == 'Calls' else 'red', 
+                edgecolors='black', s=10)
+    ax.set_title(f'{option_type} Options, {ticker}')
+    ax.set_xlabel('Strike Price')
+    ax.set_ylabel(metric.upper())
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(True)
+    if stock_price is not None:
+        ax.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
+        ax.legend()
+
 def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     if 'contractSymbol' not in df.columns:
         return
@@ -199,33 +213,13 @@ def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     df = df[df['openInterest'] > 0]
     df = df.sort_values(by='strike', ascending=True)
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))  # 1 row, 2 columns
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))  # Correctly unpacked
 
-    ax1.scatter(df['strike'], df['impliedVolatility'], 
-                color='green' if option_type == 'Calls' else 'red', 
-                edgecolors='black', s=10)
-    ax1.set_title(f'{option_type} Options, {ticker}')
-    ax1.set_xlabel('Strike Price')
-    ax1.set_ylabel('Implied Volatility')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.grid(True)
+    _plot_option_data(ax1, 'volume', stock_price, ticker, df, option_type)
+    _plot_option_data(ax2, 'openInterest', stock_price, ticker, df, option_type)
+    _plot_option_data(ax3, 'liquidity', stock_price, ticker, df, option_type)
 
-    if stock_price is not None:
-        ax1.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
-        ax1.legend()
-
-    ax2.scatter(df['strike'], df['openInterest'], 
-                color='green' if option_type == 'Calls' else 'red', 
-                edgecolors='black', s=10)
-    ax2.set_title(f'{option_type} Options, {ticker}')
-    ax2.set_xlabel('Strike Price')
-    ax2.set_ylabel('Open Interest')
-    ax2.tick_params(axis='x', rotation=45)
-    ax2.grid(True)
-
-    if stock_price is not None:
-        ax2.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
-        ax2.legend()
+    ax4.axis('off')  # Turn off ax4
 
     plt.tight_layout()
     plt.show()

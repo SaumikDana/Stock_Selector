@@ -112,6 +112,7 @@ def analyze_stock_options(ticker):
         _df['expirationDate'] = date
         _df['expirationDate'] = pd.to_datetime(_df['expirationDate']).dt.date
         _df['daysToExpiry'] = (_df['expirationDate'] - current_date).apply(lambda x: x.days)
+        _df['liquidity'] =  ((_df['ask'] + _df['bid']) / 2.) / (_df['ask'] - _df['bid'])
         opt_df = pd.concat([opt_df, _df], ignore_index=True)
         del _df
 
