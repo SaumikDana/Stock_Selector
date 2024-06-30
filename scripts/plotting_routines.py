@@ -192,10 +192,11 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
 
+    plot_macd(ticker_symbol, hist)
+
     plot_rsi(ticker_symbol, hist)
     plot_obv(ticker_symbol, hist)
     plot_so(ticker_symbol, hist)
-    plot_macd(ticker_symbol, hist)
 
 def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
 
@@ -236,8 +237,8 @@ def plot_calls_puts_separately(df, ticker):
 
 def plot_metric(ticker_symbol, metric, name):
     plt.figure(figsize=(8, 4))
-    plt.plot(metric.index, metric, label='RSI', color='purple')
-    plt.title(f'{name}, {ticker_symbol}')
+    plt.plot(metric.index, metric, color='purple')
+    plt.title(f'{name.upper()}, {ticker_symbol}')
     plt.xticks(rotation=45)
     plt.tick_params(axis='x', labelsize=8)  
     plt.show()
@@ -256,5 +257,12 @@ def plot_so(ticker_symbol, hist):
 
 def plot_macd(ticker_symbol, hist):
     macd, macd_signal, _ = calculate_macd(hist)
-    plot_metric(ticker_symbol, macd, 'macd')
-    plot_metric(ticker_symbol, macd_signal, 'macd_signal')
+    plt.figure(figsize=(8, 4))
+    plt.plot(macd.index, macd, color='blue', label='MACD')
+    plt.plot(macd_signal.index, macd_signal, color='red', label='MACD SIGNAL')
+    plt.title(f'MACD/MACD SIGNAL, {ticker_symbol}')
+    plt.xticks(rotation=45)
+    plt.legend(frameon=False, loc='best')
+    plt.tick_params(axis='x', labelsize=8)  
+    plt.show()
+
