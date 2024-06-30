@@ -129,3 +129,22 @@ def analyze_stock_options(ticker):
         opt_df = opt_df[opt_df['daysToExpiry'] <= 30]
 
     return opt_dict, opt_df
+
+def calculate_so(data, window=14, smooth_window=3):
+    stoch = ta.momentum.StochasticOscillator(high=data['High'], low=data['Low'], close=data['Close'], window=window, smooth_window=smooth_window).stoch()
+    return stoch
+
+def calculate_macd(data, window_slow=26, window_fast=12, window_sign=9):
+    macd_indicator = ta.trend.MACD(data['Close'], window_slow=window_slow, window_fast=window_fast, window_sign=window_sign)
+    macd = macd_indicator.macd()
+    macd_signal = macd_indicator.macd_signal()
+    macd_hist = macd_indicator.macd_diff()  
+    return macd, macd_signal, macd_hist
+
+def calculate_obv(data):
+    obv = ta.volume.OnBalanceVolumeIndicator(data['Close'], data['Volume']).on_balance_volume()
+    return obv
+
+def calculate_rsi(data, window=14):
+    rsi = ta.momentum.RSIIndicator(data['Close'], window=window).rsi()
+    return rsi

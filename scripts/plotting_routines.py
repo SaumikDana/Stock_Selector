@@ -53,7 +53,6 @@ def plot_volatility_surface(options_data, ticker):
             label.set_rotation(45)
 
         ax.view_init(30, 210)
-        # colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
         plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
 
         plt.show()
@@ -148,7 +147,9 @@ def stock_tracker(ticker_symbol):
 def plot_stock_historical_data(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
     industry = stock.info.get("industry", None)
-    plot_historical_data(ticker_symbol, industry, start_date, end_date)
+    adjusted_start_date = start_date - timedelta(days=100)
+
+    plot_historical_data(ticker_symbol, industry, adjusted_start_date, end_date)
 
     return
 
@@ -170,11 +171,8 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=Fal
     plt.ylabel('Price', fontsize='small')
     plt.grid(True)
     
-    if not long:
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-        plt.xticks(rotation=45)
-        plt.tick_params(axis='x', labelsize=6)
+    plt.xticks(rotation=45)
+    plt.tick_params(axis='x', labelsize=6)
 
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
@@ -190,7 +188,14 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
     plt.close()
 
-    plot_rsi(ticker_symbol, start_date, end_date)
+    adjusted_start_date = start_date - timedelta(days=100)
+    stock = yf.Ticker(ticker_symbol)
+    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+    plot_rsi(ticker_symbol, hist)
+    plot_obv(ticker_symbol, hist)
+    plot_so(ticker_symbol, hist)
+    plot_macd(ticker_symbol, hist)
 
 def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
 
@@ -229,25 +234,27 @@ def plot_calls_puts_separately(df, ticker):
     plot_option_data(df, ticker, 'Calls', stock_price=stock_price)
     plot_option_data(df, ticker, 'Puts', stock_price=stock_price)
 
-    return
-
-def plot_rsi(ticker_symbol, start_date, end_date, window=14):
-
-    adjusted_start_date = start_date - timedelta(days=window)
-
-    stock = yf.Ticker(ticker_symbol)
-    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
-
-    rsi = ta.momentum.RSIIndicator(hist['Close'], window=window).rsi()
-
-    # Set up the plot
+def plot_metric(ticker_symbol, metric, name):
     plt.figure(figsize=(8, 4))
-    plt.plot(rsi.index, rsi, label='RSI', color='purple')
-    plt.axhline(70, linestyle='--', color='red', alpha=0.5)
-    plt.axhline(30, linestyle='--', color='green', alpha=0.5)
-    plt.title(f'RSI, {ticker_symbol}')
+    plt.plot(metric.index, metric, label='RSI', color='purple')
+    plt.title(f'{name}, {ticker_symbol}')
     plt.xticks(rotation=45)
-    plt.tick_params(axis='x', labelsize=8)  # Reduce x-tick label size
-
+    plt.tick_params(axis='x', labelsize=8)  
     plt.show()
-    return
+
+def plot_rsi(ticker_symbol, hist):
+    rsi = calculate_rsi(hist)
+    plot_metric(ticker_symbol, rsi, 'rsi')
+
+def plot_obv(ticker_symbol, hist):
+    obv = calculate_obv(hist)
+    plot_metric(ticker_symbol, obv, 'obv')
+
+def plot_so(ticker_symbol, hist):
+    so = calculate_so(hist)
+    plot_metric(ticker_symbol, so, 'so')
+
+def plot_macd(ticker_symbol, hist):
+    macd, macd_signal, _ = calculate_macd(hist)
+    plot_metric(ticker_symbol, macd, 'macd')
+    plot_metric(ticker_symbol, macd_signal, 'macd_signal')
