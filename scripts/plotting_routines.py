@@ -96,7 +96,7 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
     ax.set_xlabel('Strike Price / Current Price')
     ax.set_ylabel('Implied Volatility')
-    ax.legend(frameon=False, loc='best')
+    ax.legend(frameon=False, loc='best', fontsize=6)
     ax.grid(True)
 
     plt.tight_layout()
@@ -188,15 +188,15 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
     plt.close()
 
+def plot_indicators(ticker_symbol, start_date, end_date):
+
     adjusted_start_date = start_date - timedelta(days=100)
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
 
     plot_macd(ticker_symbol, hist)
-
     plot_rsi(ticker_symbol, hist)
     plot_obv(ticker_symbol, hist)
-    plot_so(ticker_symbol, hist)
 
 def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
 
@@ -251,10 +251,6 @@ def plot_obv(ticker_symbol, hist):
     obv = calculate_obv(hist)
     plot_metric(ticker_symbol, obv, 'obv')
 
-def plot_so(ticker_symbol, hist):
-    so = calculate_so(hist)
-    plot_metric(ticker_symbol, so, 'so')
-
 def plot_macd(ticker_symbol, hist):
     macd, macd_signal, _ = calculate_macd(hist)
     plt.figure(figsize=(8, 4))
@@ -265,4 +261,3 @@ def plot_macd(ticker_symbol, hist):
     plt.legend(frameon=False, loc='best')
     plt.tick_params(axis='x', labelsize=8)  
     plt.show()
-
