@@ -210,7 +210,7 @@ def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
     ax.grid(True)
     if stock_price is not None:
         ax.axvline(x=stock_price, color='blue', linestyle='--', linewidth=2, label=f'Spot: {stock_price}')
-        ax.legend()
+        ax.legend(frameon=False, fontsize=6)
 
 def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     if 'contractSymbol' not in df.columns:
@@ -219,13 +219,10 @@ def plot_option_data(df, ticker, option_type='Calls', stock_price=None):
     df = df[df['openInterest'] > 0]
     df = df.sort_values(by='strike', ascending=True)
     
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))  # Correctly unpacked
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))  # Correctly unpacked
 
-    _plot_option_data(ax1, 'volume', stock_price, ticker, df, option_type)
-    _plot_option_data(ax2, 'openInterest', stock_price, ticker, df, option_type)
-    _plot_option_data(ax3, 'liquidity', stock_price, ticker, df, option_type)
-
-    ax4.axis('off')  # Turn off ax4
+    _plot_option_data(ax1, 'openInterest', stock_price, ticker, df, option_type)
+    _plot_option_data(ax2, 'liquidity', stock_price, ticker, df, option_type)
 
     plt.tight_layout()
     plt.show()
