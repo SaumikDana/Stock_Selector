@@ -147,7 +147,7 @@ def stock_tracker(ticker_symbol):
 def plot_stock_historical_data(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
     industry = stock.info.get("industry", None)
-    adjusted_start_date = start_date - timedelta(days=100)
+    adjusted_start_date = start_date - timedelta(days=180)
 
     plot_historical_data(ticker_symbol, industry, adjusted_start_date, end_date)
 
