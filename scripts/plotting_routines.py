@@ -164,11 +164,10 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=Fal
     else:
         raise ValueError("No suitable price data found for this stock.")
 
+    plt.figure(figsize=(8, 4))
+
     plt.plot(hist.index, prices, '-o', markersize=2)
     plt.title(f"Stock Price History of {ticker_symbol} ({industry})", fontsize='small')
-    plt.yticks(fontsize='small')
-    plt.xlabel('Date', fontsize='small')
-    plt.ylabel('Price', fontsize='small')
     plt.grid(True)
     
     plt.xticks(rotation=45)
@@ -187,16 +186,6 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
     plt.subplot(1, 2, 2)
     plot_stock_historical_data(ticker_symbol, start_date, end_date)
     plt.close()
-
-def plot_indicators(ticker_symbol, start_date, end_date):
-
-    adjusted_start_date = start_date - timedelta(days=100)
-    stock = yf.Ticker(ticker_symbol)
-    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
-
-    plot_macd(ticker_symbol, hist)
-    plot_rsi(ticker_symbol, hist)
-    plot_obv(ticker_symbol, hist)
 
 def _plot_option_data(ax, metric, stock_price, ticker, df, option_type):
 
@@ -237,24 +226,46 @@ def plot_metric(ticker_symbol, metric, name):
     plt.plot(metric.index, metric, color='purple')
     plt.title(f'{name.upper()}, {ticker_symbol}')
     plt.xticks(rotation=45)
-    plt.tick_params(axis='x', labelsize=8)  
+    plt.tick_params(axis='x', labelsize=6)
+    plt.grid(True)  
     plt.show()
 
-def plot_rsi(ticker_symbol, hist):
-    rsi = calculate_rsi(hist)
+def plot_rsi(ticker_symbol, stock, adjusted_start_date, end_date, window=14):
+    adjusted_start_date -= timedelta(days=window)
+    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+    rsi = calculate_rsi(hist, window=window)
     plot_metric(ticker_symbol, rsi, 'rsi')
 
-def plot_obv(ticker_symbol, hist):
+def plot_obv(ticker_symbol, stock, adjusted_start_date, end_date):
+    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
     obv = calculate_obv(hist)
     plot_metric(ticker_symbol, obv, 'obv')
 
-def plot_macd(ticker_symbol, hist):
-    macd, macd_signal, _ = calculate_macd(hist)
+def plot_macd(ticker_symbol, stock, adjusted_start_date, end_date, window_slow=26, window_fast=12, window_sign=9):
+    adjusted_start_date -= timedelta(days=window_slow+window_sign)
+    hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+    macd, macd_signal, _ = calculate_macd(hist, window_slow=window_slow, window_fast=window_fast, window_sign=window_sign)
     plt.figure(figsize=(8, 4))
     plt.plot(macd.index, macd, color='blue', label='MACD')
     plt.plot(macd_signal.index, macd_signal, color='red', label='MACD SIGNAL')
     plt.title(f'MACD/MACD SIGNAL, {ticker_symbol}')
     plt.xticks(rotation=45)
     plt.legend(frameon=False, loc='best')
-    plt.tick_params(axis='x', labelsize=8)  
+    plt.tick_params(axis='x', labelsize=6)
+    plt.grid(True)  
     plt.show()
+
+def plot_indicators(ticker_symbol, start_date, end_date):
+
+    adjusted_start_date = start_date - timedelta(days=180)
+    stock = yf.Ticker(ticker_symbol)
+
+    # hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+    plot_macd(ticker_symbol, stock, adjusted_start_date, end_date)
+    plot_rsi(ticker_symbol, stock, adjusted_start_date, end_date)
+    plot_obv(ticker_symbol, stock, adjusted_start_date, end_date)
+
