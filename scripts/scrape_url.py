@@ -33,10 +33,47 @@ def extract_table(url):
         return table
     except:
         return None  
-        
+
 def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
     ticker_data = ticker_data.dropna(subset=['Stock Price'])
     ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
 
     return ticker_data_sorted
+
+def fetch_dividends(url):
+    # Send the request to the URL
+    response = requests.get(url)
+    # Check if the request was successful
+    response.raise_for_status()
+    
+    # Parse the HTML content
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Find the table by ID or class or tag etc.
+    table = soup.find('table')
+    
+    # Extract the rows from the table
+    rows = table.find_all('tr')
+    
+    # List to hold all ticker symbols
+    ticker_symbols = []
+    
+    # Skip the first row assuming it's the header row
+    for row in rows[1:]:
+        cols = row.find_all('td')
+        # Check if there are enough columns to have a second entry
+        if len(cols) > 1:
+            # Extract the text from the second column (ticker symbol)
+            ticker_symbol = cols[1].text.strip()
+            ticker_symbols.append(ticker_symbol)
+    
+    return ticker_symbols
+
+def process_dividend_table(ticker_list, ticker_data_list):
+    for ticker in ticker_list:
+        if pd.notna(ticker):
+            price = get_stock_price(ticker)
+            ticker_data_list.append(pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]}))
+    return ticker_data_list
+
