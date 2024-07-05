@@ -145,3 +145,18 @@ def calculate_rsi(data, window=14):
     rsi = ta.momentum.RSIIndicator(data['Close'], window=window).rsi()
     return rsi
 
+def get_stock_news(ticker):
+    stock = yf.Ticker(ticker)
+    news = stock.news
+    
+    if news:
+        for item in news:
+            print(f"Title: {item['title']}")
+            print(f"Publisher: {item['publisher']}")
+            print(f"Link: {item['link']}")
+            # Convert UNIX timestamp to a readable date
+            date = datetime.fromtimestamp(item['providerPublishTime'])
+            print(f"Date: {date.strftime('%Y-%m-%d %H:%M:%S')}")
+            print("\n")
+    else:
+        print("No news available for this ticker.")

@@ -263,8 +263,6 @@ def plot_indicators(ticker_symbol, start_date, end_date):
     adjusted_start_date = start_date - timedelta(days=180)
     stock = yf.Ticker(ticker_symbol)
 
-    # hist = stock.history(start=adjusted_start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
-
     plot_macd(ticker_symbol, stock, adjusted_start_date, end_date)
     plot_rsi(ticker_symbol, stock, adjusted_start_date, end_date)
     plot_obv(ticker_symbol, stock, adjusted_start_date, end_date)
