@@ -1,24 +1,12 @@
 import setup
 from imports import *
 
-def get_stock_price(ticker):
-    stock = yf.Ticker(ticker)
-    try:
-        stock_info = stock.info
-        price = stock_info.get('currentPrice')
-        return price
-    except ValueError as e:
-        print(f"Error retrieving info for {ticker}: {e}")
-        return None
-
 def process_earnings_table(table, ticker_data_list):
     df = pd.read_html(str(table))[0]
     if 'Symbol' in df.columns:
         for _, row in df.iterrows():
             ticker = row.get('Symbol')
-            if pd.notna(ticker):
-                price = get_stock_price(ticker)
-                ticker_data_list.append(pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]}))
+            ticker_data_list.append(pd.DataFrame({'Symbol': [ticker]}))
     return ticker_data_list
 
 def extract_table(url):
@@ -34,14 +22,11 @@ def extract_table(url):
     except:
         return None  
 
-def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
+def convert_to_dataframe(ticker_data_list):
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
-    ticker_data = ticker_data.dropna(subset=['Stock Price'])
-    ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
+    return ticker_data
 
-    return ticker_data_sorted
-
-def fetch_dividends(url):
+def fetch_ma(url):
     # Send the request to the URL
     response = requests.get(url)
     # Check if the request was successful
@@ -57,23 +42,32 @@ def fetch_dividends(url):
     rows = table.find_all('tr')
     
     # List to hold all ticker symbols
-    ticker_symbols = []
+    ticker_symbols_acquirer = []
+    ticker_symbols_target = []
     
     # Skip the first row assuming it's the header row
     for row in rows[1:]:
         cols = row.find_all('td')
         # Check if there are enough columns to have a second entry
         if len(cols) > 1:
-            # Extract the text from the second column (ticker symbol)
-            ticker_symbol = cols[1].text.strip()
-            ticker_symbols.append(ticker_symbol)
-    
-    return ticker_symbols
+            if cols[9].text.strip() == "Completed":
+                continue
+            ticker_symbol_acquirer = cols[3].text.strip()
+            ticker_symbol_target = cols[4].text.strip()
 
-def process_dividend_table(ticker_list, ticker_data_list):
+            if ticker_symbol_acquirer.count('(') == 1 and ticker_symbol_acquirer.count(')') == 1:
+                match = re.search(r'\((.*?)\)', ticker_symbol_acquirer)
+                ticker_symbols_acquirer.append(match.group(1))
+
+            if ticker_symbol_target.count('(') == 1 and ticker_symbol_target.count(')') == 1:
+                match = re.search(r'\((.*?)\)', ticker_symbol_target)
+                ticker_symbols_target.append(match.group(1))
+    
+    return ticker_symbols_acquirer, ticker_symbols_target
+
+def process_ma_table(ticker_list, ticker_data_list):
     for ticker in ticker_list:
-        if pd.notna(ticker):
-            price = get_stock_price(ticker)
-            ticker_data_list.append(pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]}))
+        ticker_data_list.append(pd.DataFrame({'Symbol': [ticker]}))
+
     return ticker_data_list
 

@@ -69,10 +69,8 @@ def calculate_rsi(data, window=14):
     rsi = ta.momentum.RSIIndicator(data['Close'], window=window).rsi()
     return rsi
 
-def get_stock_news(ticker):
-    stock = yf.Ticker(ticker)
-    news = stock.news
-    
+def get_stock_news(stock):
+    news = stock.news    
     if news:
         for item in news:
             print(f"Title: {item['title']}")
